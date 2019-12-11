@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.10-alpine AS build-env
+FROM golang:1.12-alpine AS build-env
 LABEL maintainer "Jimmy Zelinskie <jimi@redhat.com>"
 
 ARG GIT_TAG
@@ -22,15 +22,15 @@ RUN apk add --no-cache git bzr rpm xz supervisor gcc musl-dev
 # Build cfssl and jwtproxy
 RUN go get -u github.com/cloudflare/cfssl/cmd/cfssl
 RUN go get -u github.com/cloudflare/cfssl/cmd/cfssljson
-RUN go get -u github.com/coreos/jwtproxy/cmd/jwtproxy
+RUN go get -u github.com/quay/jwtproxy/cmd/jwtproxy
 
 # Build clair
-RUN go get -u -d github.com/coreos/clair/cmd/clair
-WORKDIR /go/src/github.com/coreos/clair
+RUN go get -u -d github.com/pawelwiecaszek/clair/cmd/clair
+WORKDIR /go/src/github.com/pawelwiecaszek/clair
 RUN git checkout $GIT_TAG
-RUN go install github.com/coreos/clair/cmd/clair
+RUN go install github.com/pawelwiecaszek/clair/cmd/clair
 
-FROM alpine:3.7 AS runtime-env
+FROM alpine:3.9 AS runtime-env
 LABEL maintainer "Jimmy Zelinskie <jimi@redhat.com>"
 
 RUN apk add --no-cache supervisor ca-certificates \

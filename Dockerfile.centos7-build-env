@@ -19,11 +19,11 @@ ARG GIT_TAG
 RUN test -n "$GIT_TAG" # Expect Clair GIT TAG to be non-empty.
 
 # Install Golang by retrieving the binary
-ENV GO_VERSION=1.11.5
+ENV GO_VERSION=1.12.14
 ENV GO_OS=linux
 ENV GO_ARC=amd64
 RUN curl https://dl.google.com/go/go${GO_VERSION}.${GO_OS}-${GO_ARC}.tar.gz --output go.tar.gz
-RUN echo ff54aafedff961eb94792487e827515da683d61a5f9482f668008832631e5d25 go.tar.gz > GOCHECKSUM
+RUN echo 925a1a9d8b31c2425d7313fe73d3342288968a66e26cd8bf1b6b5656f4603fcb go.tar.gz > GOCHECKSUM
 RUN sha256sum -c GOCHECKSUM
 RUN tar -C /usr/local -xzf go.tar.gz > /dev/null
 ENV GOPATH=/go
@@ -45,7 +45,7 @@ RUN go install github.com/cloudflare/cfssl/cmd/cfssljson
 RUN go get -u github.com/coreos/jwtproxy/cmd/jwtproxy
 
 # Build Clair with git tag
-RUN go get -u -d github.com/coreos/clair/cmd/clair
-WORKDIR /go/src/github.com/coreos/clair
+RUN go get -u -d github.com/quay/clair/cmd/clair
+WORKDIR /go/src/github.com/quay/clair
 RUN git checkout $GIT_TAG
-RUN go install github.com/coreos/clair/cmd/clair
+RUN go install github.com/quay/clair/cmd/clair
