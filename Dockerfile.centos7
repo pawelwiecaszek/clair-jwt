@@ -17,6 +17,8 @@ ARG REPO_NAME
 FROM ${REPO_NAME}:${GIT_TAG}-centos7-build-env AS build-env
 FROM centos:7
 LABEL maintainer "Sida Chen <sidchen@redhat.com>"
+ENV CLAIRDIR /clair
+ENV CLAIRCONF /clair/config
 
 # Install init system and Clair depended binaries
 RUN yum install -y --setopt=tsflags=nodocs --setopt=skip_missing_names_on_install=False python-setuptools git rpm xz
@@ -30,12 +32,22 @@ COPY --from=build-env /go/bin/jwtproxy /usr/local/bin/jwtproxy
 COPY --from=build-env /go/bin/clair /usr/local/bin/clair
 
 # Add the init scripts
-ADD generate_mitm_ca.rhel.sh /generate_mitm_ca.sh
-ADD boot.sh /boot.sh
-ADD supervisord.conf /supervisord.conf
+ADD generate_mitm_ca.rhel.sh $CLAIRDIR/generate_mitm_ca.sh
+ADD clair-entrypoint.sh $CLAIRDIR/clair-entrypoint.sh
+ADD supervisord.conf $CLAIRDIR/supervisord.conf
 
-VOLUME /config
-VOLUME /certs
+RUN yum clean all
+RUN rm -rf /var/cache/yum /tmp/* /var/tmp/* /root/.cache
+
+RUN chgrp -R 0 $CLAIRDIR && \
+    chmod -R g=u $CLAIRDIR
+
+RUN mkdir -p /tmp && chgrp 0 /tmp && chmod g=u /tmp && \
+    chmod g=u /etc/passwd
+
 EXPOSE 6060 6061
 
-CMD ["sh", "/boot.sh"]
+VOLUME ["/clair/config", "/clair/certs"]
+
+ENTRYPOINT ["/clair/clair-entrypoint.sh"]
+CMD ["scanner"]
